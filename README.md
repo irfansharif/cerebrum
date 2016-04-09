@@ -1,4 +1,4 @@
-# GEM: cerebrum [WIP]
+# GEM: cerebrum [WIP] ![](https://travis-ci.org/irfansharif/cerebrum.svg?branch=master)
 
 `cerebrum` is an implementation of
 [ANNs](https://en.wikipedia.org/wiki/Artificial_neural_networ://en.wikipedia.org/wiki/Artificial_neural_network)
