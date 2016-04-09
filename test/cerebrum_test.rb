@@ -5,7 +5,11 @@ class CerebrumTest < Minitest::Test
     refute_nil ::Cerebrum::VERSION
   end
 
-  def test_it_does_something_useful
-    assert false
+  def test_default_options_are_set_and_accessible
+    network = Cerebrum.new
+
+    assert_equal network.learning_rate, 0.3
+    assert_equal network.momentum, 0.1
+    assert_equal network.binary_thresh, 0.5
   end
 end

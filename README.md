@@ -68,10 +68,13 @@ result = network.run({ r: 1, g: 0.4, b: 0 })
 
 #### Cerebrum Options
 
-`Cerebrum#new` takes a hash of options:
+`Cerebrum#new` takes a hash of options that would set defaults if not specified in the `Cerebrum#train` procedure call:
 
 ```ruby
 network = Cerebrum.new({
+  learning_rate: 0.3,
+  momentum: 0.1,
+  binary_thresh: 0.5,
   hidden_layers: [3, 4]
 })
 ```
