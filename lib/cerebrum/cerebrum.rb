@@ -4,6 +4,8 @@ require_relative "lin_alg"
 require "pp" #for slightly better logging [temporary]
 
 class Cerebrum
+  include Helpers
+
   attr_accessor :learning_rate, :momentum, :binary_thresh, :hidden_layers
 
   def initialize(learning_rate: 0.3, momentum: 0.1, binary_thresh: 0.5, hidden_layers: nil)
@@ -59,12 +61,6 @@ class Cerebrum
     error = mean_squared_error(@errors[@layers])
   end
 
-# scrubbed data set:
-# [
-#   { input: [ 0.03, 0.7, 0.5 ],            output: [ 1, 0 ] },
-#   { input: [ 0.16, 0.09, 0.2 ],           output: [ 0, 1 ] },
-#   { input: [ 0.5, 0.5, 1 ],               output: [ 0, 1 ] }
-# ]
   def train(training_set, options = Hash.new)
     training_set = scrub_data_set(training_set)
 
@@ -73,40 +69,27 @@ class Cerebrum
     log             = options[:log] || false
     log_period      = options[:log_period] || 10
     learning_rate   = options[:learning_rate] || 0.3
+    error           = Float::INFINITY
 
     input_size = training_set[0][:input].length
     output_size = training_set[0][:output].length
 
     hidden_layers = [ [3, (input_size/2).floor].max ] unless @hidden_layers
     sizes = [input_size, hidden_layers, output_size].flatten
-
     construct_network(sizes)
 
-    error = 1
-    iteration_num = 0
-    while iteration_num < iterations && error > error_thresh
-      sum = 0
-      set_iteration = 0
-      while set_iteration < training_set.length
-        err = train_pattern(
-                training_set[set_iteration][:input],
-                training_set[set_iteration][:output],
-                learning_rate
-              )
-        sum = sum + err
-        set_iteration = set_iteration + 1
+    iterations.times do |i|
+      training_set_err = training_set.map do |example|
+        train_pattern(example[:input], example[:output], learning_rate)
       end
 
-      error = sum / training_set.length
+      error = training_set_err.inject(:+) / training_set.length
 
-      if (log && iteration_num % log_period == 0)
-        p "iterations: #{iteration_num}, training error: #{error}"
-      end
-
-      iteration_num = iteration_num + 1
+      puts "(#{i}) training error: #{error}" if (log && (i % log_period) == 0)
+      break if error < error_thresh
     end
 
-   Hash[:error, error, :iterations, iteration_num]
+    { error: error, iterations: iteration_num }
   end
 
   def mean_squared_error(errors)
