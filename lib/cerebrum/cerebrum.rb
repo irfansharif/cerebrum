@@ -31,8 +31,18 @@ class Cerebrum
     end
   end
 
-  def train_pattern(x, y)
-    # TODO
+  def train_pattern(input, target, learning_rate)
+    learning_rate = learning_rate || @learning_rate
+
+    # forward propagation
+    run_input(input)
+
+    # backward propagation
+    calculate_deltas(target)
+    adjust_weights(learning_rate)
+
+    # calculate new error
+    error = mean_squared_error(@errors[@layers])
   end
 
   def train(training_set, options = Hash.new)
@@ -77,5 +87,42 @@ class Cerebrum
     end
 
    Hash[:error, error, :iterations, iteration_num]
+  end
+
+  def mean_squared_error(errors)
+    sum = 0
+    errors.each do |error|
+      sum = sum + error * error
+    end
+    mse = sum / errors.length
+  end
+
+  def adjust_weights(rate)
+    for layer in 1..@layers
+      incoming = @outputs[layer - 1]
+
+      for node in 0..@sizes
+        delta = @deltas[layer, node]
+
+        for i in 0..incoming.length
+          change = @changes[layer, node, i]
+          change = rate * delta * incoming[i] +
+                    @momentum * change
+
+          @changes[layer, node, i] = change
+          @weights[layer, node, i] += change
+        end
+
+        @biases[layer, node] += rate * delta
+      end
+    end
+  end
+
+  def calculate_deltas(x)
+    # TODO
+  end
+
+  def run_input(input)
+    # TODO
   end
 end
