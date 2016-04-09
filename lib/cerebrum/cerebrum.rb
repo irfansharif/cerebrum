@@ -11,8 +11,24 @@ class Cerebrum
     @hidden_layers  = hidden_layers
   end
 
-  def initialize_n_n
-    # TODO
+  def initialize_n_n(sizes)
+    @sizes = sizes
+    @layers = sizes.length - 1 # Excluding output layer
+
+    @biases = []
+    @weights = []
+    @outputs = []
+
+    @deltas = []
+    @changes = []
+    @errors = []
+
+    @layers.each do |layer|
+      size = @sizes[layer_number]
+      deltas[layer] = Array.new(size, 0)
+      errors[layer] = Array.new(size, 0)
+      outputs[layer] = Array.new(size, 0)
+    end
   end
 
   def train_pattern(x, y)
