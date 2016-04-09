@@ -39,7 +39,6 @@ network.train([
 
 result = network.run([1, 0])
 # => [0.983]
-    
 
 ```
 
