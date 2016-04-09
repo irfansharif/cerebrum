@@ -1,8 +1,5 @@
-class Cerebrum
-  private
-  # Purpose: sparse hash <---> array
-
-  # Purpose: sparse hash <---> array
+module Helpers
+  extend self
 
   # [{a: 1}, {b: 6, c: 7}] -> {a: 0, b: 1, c: 2}
   def build_lookup(hashes)
@@ -17,13 +14,11 @@ class Cerebrum
 
   # changes hash {a: 6, b: 7} to {a: 0, b: 1}
   def lookup_from_hash(hash)
-    lookup = {}
-    hash.each_with_index.map { |x, i| lookup[x[0]] = i }
-    return lookup
+    hash.each_with_index{ |pair, index| hash[pair.first] = index }
   end
 
   # formats {a: 0, b: 1}, {a: 6} to [6, 0]
-  def to_array(lookup, hash)
+  def to_array_given_hash(lookup, hash)
     arr = []
     lookup.map do |k, v|
       arr[v] = hash[k] || 0
@@ -32,20 +27,12 @@ class Cerebrum
   end
 
   # {a: 0, b: 1}, [6, 7] to {a: 6, b: 7}
-  def to_hash(lookup, arr)
-    hash = {}
-    lookup.map do |k, v|
-      hash[k] = arr[v]
-    end
-    return hash
+  def to_hash_given_array(lookup, arr)
+    lookup.keys.zip(arr).to_h
   end
 
   # [5, 3] to {5: 0, 3: 1}
   def lookup_from_array(arr)
-    lookup = {}
-    arr.each_with_index do |k, i|
-      lookup[k] = i
-    end
-    return lookup
+    Hash[arr.each_with_index.map { |val, i| [val, i] }]
   end
 end
