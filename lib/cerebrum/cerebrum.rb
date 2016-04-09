@@ -11,7 +11,7 @@ class Cerebrum
     @hidden_layers  = hidden_layers
   end
 
-  def initialize_n_n(sizes)
+  def construct_network(sizes)
     @sizes = sizes
     @layers = sizes.length - 1 # Excluding output layer
 
@@ -50,7 +50,7 @@ class Cerebrum
     hidden_layers = [ [3, (input_size/2).floor].max ] unless @hidden_layers
     sizes = [input_size, hidden_layers, output_size].flatten
 
-    initialize_n_n(sizes)
+    construct_network(sizes)
 
     error = 1
     iteration_num = 0
