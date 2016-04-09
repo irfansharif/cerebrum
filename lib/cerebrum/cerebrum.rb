@@ -1,4 +1,5 @@
 require_relative "data_scrub"
+require_relative "lookup"
 
 class Cerebrum
   attr_accessor :learning_rate, :momentum, :binary_thresh, :hidden_layers
