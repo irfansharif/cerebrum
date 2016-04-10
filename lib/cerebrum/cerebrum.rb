@@ -28,7 +28,7 @@ class Cerebrum
     @changes = []
     @errors = []
 
-    @layers.times do |layer|
+    0.upto(@layers) do |layer|
       size = @sizes[layer]
       @deltas[layer] = zeros(size)
       @errors[layer] = zeros(size)
@@ -139,7 +139,90 @@ class Cerebrum
   end
 
   def run_input(input)
+    output = []
+
     @outputs[0] = input
+    1.upto(@layers) do |layer|
+
+      0.upto(@sizes[layer] - 1) do |node|
+
+        p "layer: #{layer} node: #{node}"
+        p "@weights[layer]"
+        @weights[layer]
+
+        weights = @weights[layer][node]
+
+        p "weights"
+        pp weights
+
+        sum = @biases[layer][node]
+
+        0.upto(weights.length - 1) do |i|
+          sum += weights[i] * input[i]
+        end
+
+        @outputs[layer][node] = 1 / (1 + Math.exp(-sum))
+      end
+      output = input = @outputs[layer]
+    end
+    p "output #{output}"
+    output
+  end
+<<<<<<< HEAD
+||||||| parent of f785547... fixed bug where a layer was not generated, var not defined in upper scope in run_input
+
+  def mean_squared_error(errors)
+    sum = 0
+    errors.each do |error|
+      sum = sum + error * error
+    end
+    mse = sum / errors.length
+  end
+
+  def adjust_weights(rate)
+    for layer in 1..@layers
+      incoming = @layers[layer - 1]
+
+      for node in 0..@sizes
+        delta = @deltas[layer, node]
+
+        for i in 0..incoming.length
+          change = @changes[layer, node, i]
+          change = rate * delta * incoming[i] +
+                    @momentum * change
+
+          @changes[layer][node][i] = change
+          @weights[layer][node][i] += change
+        end
+
+        @biases[layer, node] += rate * delta
+      end
+    end
+  end
+
+  def calculate_deltas(target)
+    @layers.downto(0) do |layer|
+       0.upto(@sizes[layer]) do |node|
+        output = @outputs[layer][node]
+        error = 0
+        if layer == @layers
+          error = target[node]
+        else
+          deltas = @deltas[layer + 1]
+          deltas.times do |i|
+            error += deltas[i] * @weights[layer + 1, i, node]
+          end
+        end
+        @errors[layer][node] = error
+        @deltas[layer][node] = error * output * (1 - output)
+       end
+    end
+  end
+
+  def run_input(input)
+    @outputs[0] = input
+    p "@outputs:"
+    pp @outputs
     1.upto(@layers) do |layer|
 
       0.upto(@sizes[layer] - 1) do |node|
@@ -149,6 +232,7 @@ class Cerebrum
         0.upto(weights.length - 1) do |i|
           sum += weights[i] * input[i]
         end
+        p "layer: #{layer}, node: #{node}"
         @outputs[layer][node] = 1 / (1 + Math.exp(-sum))
       end
       input = @outputs[layer]
@@ -156,4 +240,54 @@ class Cerebrum
     end
     output
   end
+=======
+
+  def mean_squared_error(errors)
+    sum = 0
+    errors.each do |error|
+      sum = sum + error * error
+    end
+    mse = sum / errors.length
+  end
+
+  def adjust_weights(rate)
+    for layer in 1..@layers
+      incoming = @layers[layer - 1]
+
+      for node in 0..@sizes
+        delta = @deltas[layer, node]
+
+        for i in 0..incoming.length
+          change = @changes[layer, node, i]
+          change = rate * delta * incoming[i] +
+                    @momentum * change
+
+          @changes[layer][node][i] = change
+          @weights[layer][node][i] += change
+        end
+
+        @biases[layer, node] += rate * delta
+      end
+    end
+  end
+
+  def calculate_deltas(target)
+    @layers.downto(0) do |layer|
+       0.upto(@sizes[layer]) do |node|
+        output = @outputs[layer][node]
+        error = 0
+        if layer == @layers
+          error = target[node]
+        else
+          deltas = @deltas[layer + 1]
+          deltas.times do |i|
+            error += deltas[i] * @weights[layer + 1, i, node]
+          end
+        end
+        @errors[layer][node] = error
+        @deltas[layer][node] = error * output * (1 - output)
+       end
+    end
+  end
+>>>>>>> f785547... fixed bug where a layer was not generated, var not defined in upper scope in run_input
 end
