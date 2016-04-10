@@ -4,6 +4,6 @@ class Cerebrum
   end
 
   def randos(size)
-    Array.new(size, rand)
+    Array.new(size) { rand }
   end
 end
