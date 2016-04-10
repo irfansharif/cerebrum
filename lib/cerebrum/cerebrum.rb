@@ -1,6 +1,7 @@
-require_relative "data_scrub"
+require_relative "data_scrubber"
 require_relative "helper"
 require_relative "lin_alg"
+
 require "pp" #for slightly better logging [temporary]
 
 class Cerebrum
@@ -61,12 +62,6 @@ class Cerebrum
     error = mean_squared_error(@errors[@layers])
   end
 
-# scrubbed data set:
-# [
-#   { input: [ 0.03, 0.7, 0.5 ],            output: [ 1, 0 ] },
-#   { input: [ 0.16, 0.09, 0.2 ],           output: [ 0, 1 ] },
-#   { input: [ 0.5, 0.5, 1 ],               output: [ 0, 1 ] }
-# ]
   def train(training_set, options = Hash.new)
     training_set = scrub_dataset(training_set)
 
@@ -145,8 +140,6 @@ class Cerebrum
 
   def run_input(input)
     @outputs[0] = input
-    p "@outputs:"
-    pp @outputs
     1.upto(@layers) do |layer|
 
       0.upto(@sizes[layer] - 1) do |node|
@@ -156,7 +149,6 @@ class Cerebrum
         0.upto(weights.length - 1) do |i|
           sum += weights[i] * input[i]
         end
-        p "layer: #{layer}, node: #{node}"
         @outputs[layer][node] = 1 / (1 + Math.exp(-sum))
       end
       input = @outputs[layer]

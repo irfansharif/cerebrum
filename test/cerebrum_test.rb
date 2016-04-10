@@ -1,16 +1,18 @@
 require 'test_helper'
 
 class CerebrumTest < Minitest::Test
+  def setup
+    @network = Cerebrum.new
+  end
+
   def test_that_it_has_a_version_number
     refute_nil ::Cerebrum::VERSION
   end
 
   def test_default_options_are_set_and_accessible
-    network = Cerebrum.new
-
-    assert_equal network.learning_rate, 0.3
-    assert_equal network.momentum, 0.1
-    assert_equal network.binary_thresh, 0.5
+    assert_equal @network.learning_rate, 0.3
+    assert_equal @network.momentum, 0.1
+    assert_equal @network.binary_thresh, 0.5
   end
 
   def test_train
@@ -20,7 +22,7 @@ class CerebrumTest < Minitest::Test
       { input: [ 0.5, 0.5, 1 ],               output: [ 0, 1 ] }
     ]
 
-    network = Cerebrum.new
-    network.train(scrubbed_dataset)
+    @network = Cerebrum.new
+    @network.train(scrubbed_dataset)
   end
 end
