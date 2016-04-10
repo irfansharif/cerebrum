@@ -1,5 +1,7 @@
 require_relative "data_scrub"
 require_relative "lookup"
+require_relative "lin_alg"
+require "pp" #for slightly better logging [temporary]
 
 class Cerebrum
   attr_accessor :learning_rate, :momentum, :binary_thresh, :hidden_layers
@@ -23,11 +25,23 @@ class Cerebrum
     @changes = []
     @errors = []
 
-    @layers.each do |layer|
-      size = @sizes[layer_number]
-      deltas[layer] = Array.new(size, 0)
-      errors[layer] = Array.new(size, 0)
-      outputs[layer] = Array.new(size, 0)
+    @layers.times do |layer|
+      size = @sizes[layer]
+      @deltas[layer] = zeros(size)
+      @errors[layer] = zeros(size)
+      @outputs[layer] = zeros(size)
+
+      if layer > 0
+        @biases[layer] = randos(size)
+        @weights[layer] = Array.new(size)
+        @changes[layer] = Array.new(size)
+
+        size.times do |node|
+          prev_size = @sizes[layer - 1]
+          @weights[layer][node] = randos(prev_size)
+          @changes[layer][node] = zeros(prev_size)
+        end
+      end
     end
   end
 
@@ -45,6 +59,12 @@ class Cerebrum
     error = mean_squared_error(@errors[@layers])
   end
 
+# scrubbed data set:
+# [
+#   { input: [ 0.03, 0.7, 0.5 ],            output: [ 1, 0 ] },
+#   { input: [ 0.16, 0.09, 0.2 ],           output: [ 0, 1 ] },
+#   { input: [ 0.5, 0.5, 1 ],               output: [ 0, 1 ] }
+# ]
   def train(training_set, options = Hash.new)
     training_set = scrub_data_set(training_set)
 
@@ -99,7 +119,7 @@ class Cerebrum
 
   def adjust_weights(rate)
     for layer in 1..@layers
-      incoming = @outputs[layer - 1]
+      incoming = @layers[layer - 1]
 
       for node in 0..@sizes
         delta = @deltas[layer, node]
@@ -109,8 +129,8 @@ class Cerebrum
           change = rate * delta * incoming[i] +
                     @momentum * change
 
-          @changes[layer, node, i] = change
-          @weights[layer, node, i] += change
+          @changes[layer][node][i] = change
+          @weights[layer][node][i] += change
         end
 
         @biases[layer, node] += rate * delta
@@ -118,11 +138,44 @@ class Cerebrum
     end
   end
 
-  def calculate_deltas(x)
-    # TODO
+  def calculate_deltas(target)
+    @layers.downto(0) do |layer|
+       0.upto(@sizes[layer]) do |node|
+        output = @outputs[layer][node]
+        error = 0
+        if layer == @layers
+          error = target[node]
+        else
+          deltas = @deltas[layer + 1]
+          deltas.times do |i|
+            error += deltas[i] * @weights[layer + 1, i, node]
+          end
+        end
+        @errors[layer][node] = error
+        @deltas[layer][node] = error * output * (1 - output)
+       end
+    end
   end
 
   def run_input(input)
-    # TODO
+    @outputs[0] = input
+    p "@outputs:"
+    pp @outputs
+    1.upto(@layers) do |layer|
+
+      0.upto(@sizes[layer] - 1) do |node|
+        weights = @weights[layer][node]
+        sum = @biases[layer][node]
+
+        0.upto(weights.length - 1) do |i|
+          sum += weights[i] * input[i]
+        end
+        p "layer: #{layer}, node: #{node}"
+        @outputs[layer][node] = 1 / (1 + Math.exp(-sum))
+      end
+      input = @outputs[layer]
+      output = @outputs[layer]
+    end
+    output
   end
 end
