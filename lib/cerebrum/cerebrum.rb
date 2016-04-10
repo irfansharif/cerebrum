@@ -1,5 +1,5 @@
 require_relative "data_scrub"
-require_relative "lookup"
+require_relative "helper"
 require_relative "lin_alg"
 require "pp" #for slightly better logging [temporary]
 
@@ -61,8 +61,14 @@ class Cerebrum
     error = mean_squared_error(@errors[@layers])
   end
 
+# scrubbed data set:
+# [
+#   { input: [ 0.03, 0.7, 0.5 ],            output: [ 1, 0 ] },
+#   { input: [ 0.16, 0.09, 0.2 ],           output: [ 0, 1 ] },
+#   { input: [ 0.5, 0.5, 1 ],               output: [ 0, 1 ] }
+# ]
   def train(training_set, options = Hash.new)
-    training_set = scrub_data_set(training_set)
+    training_set = scrub_dataset(training_set)
 
     iterations      = options[:iterations] || 20000
     error_thresh    = options[:error_threshold] || 0.005
@@ -79,13 +85,10 @@ class Cerebrum
     construct_network(sizes)
 
     iterations.times do |i|
-      training_set_err = training_set.map do |example|
-        train_pattern(example[:input], example[:output], learning_rate)
-      end
-
+      training_set_err = training_set.map { |ex| train_pattern(ex[:input], ex[:output], learning_rate) }
       error = training_set_err.inject(:+) / training_set.length
-
       puts "(#{i}) training error: #{error}" if (log && (i % log_period) == 0)
+
       break if error < error_thresh
     end
 
