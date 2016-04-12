@@ -2,8 +2,6 @@ require_relative "data_scrubber"
 require_relative "helper"
 require_relative "lin_alg"
 
-require "pp" #for slightly better logging [temporary]
-
 class Cerebrum
   include Helpers
 
@@ -16,34 +14,29 @@ class Cerebrum
     @hidden_layers  = hidden_layers
   end
 
-  def construct_network(sizes)
-    @sizes = sizes
-    @layers = sizes.length - 1 # Excluding output layer
+  def construct_network(layer_sizes)
+    @layer_sizes = layer_sizes
+    @layers = layer_sizes.length - 1 # Excluding output layer
 
-    @biases = []
-    @weights = []
-    @outputs = []
+    @biases, @weights, @outputs = [], [], []
+    @deltas, @changes, @errors = [], [], []
 
-    @deltas = []
-    @changes = []
-    @errors = []
+    (@layers + 1).times do |layer| # Including output layer
+      layer_size = @layer_sizes[layer]
+      @deltas[layer] = zeros(layer_size)
+      @errors[layer] = zeros(layer_size)
+      @outputs[layer] = zeros(layer_size)
 
-    0.upto(@layers) do |layer|
-      size = @sizes[layer]
-      @deltas[layer] = zeros(size)
-      @errors[layer] = zeros(size)
-      @outputs[layer] = zeros(size)
+      next if layer == 0
 
-      if layer > 0
-        @biases[layer] = randos(size)
-        @weights[layer] = Array.new(size)
-        @changes[layer] = Array.new(size)
+      @biases[layer] = randos(layer_size)
+      @weights[layer] = Array.new(layer_size)
+      @changes[layer] = Array.new(layer_size)
+      previous_layer_size = @layer_sizes[layer - 1]
 
-        size.times do |node|
-          prev_size = @sizes[layer - 1]
-          @weights[layer][node] = randos(prev_size)
-          @changes[layer][node] = zeros(prev_size)
-        end
+      layer_size.times do |node|
+        @weights[layer][node] = randos(previous_layer_size)
+        @changes[layer][node] = zeros(previous_layer_size)
       end
     end
   end
@@ -59,13 +52,13 @@ class Cerebrum
     adjust_weights(learning_rate)
 
     # calculate new error
-    error = mean_squared_error(@errors[@layers])
+    mean_squared_error(@errors[@layers])
   end
 
   def train(training_set, options = Hash.new)
     training_set = scrub_dataset(training_set)
 
-    iterations        = options[:iterations] || 20
+    iterations        = options[:iterations] || 20000
     error_threshold   = options[:error_threshold] || 0.005
     log               = options[:log] || false
     log_period        = options[:log_period] || 10
@@ -93,50 +86,47 @@ class Cerebrum
   end
 
   def mean_squared_error(errors)
-    sum = 0
-    errors.each do |error|
-      sum = sum + error * error
-    end
-    sum / errors.length
+    sum_of_squares = errors.map{ |error| error ** 2 }.reduce(:+)
+    Float(sum_of_squares) / errors.length
   end
 
   def adjust_weights(rate)
-    for layer in 1..@layers
-      incoming = @layers[layer - 1]
+    1.upto(@layers) do |layer|
+      incoming = @outputs[layer - 1]
 
-      for node in 0..@sizes
-        delta = @deltas[layer, node]
+      0.upto(@layer_sizes[layer] - 1) do |node|
+        delta = @deltas[layer][node]
 
-        for i in 0..incoming.length
-          change = @changes[layer, node, i]
+        0.upto(incoming.length - 1) do |i|
+          change = @changes[layer][node][i]
           change = rate * delta * incoming[i] +
-                    @momentum * change
+            @momentum * change
 
           @changes[layer][node][i] = change
           @weights[layer][node][i] += change
         end
 
-        @biases[layer, node] += rate * delta
+        @biases[layer][node] += rate * delta
       end
     end
   end
 
   def calculate_deltas(target)
     @layers.downto(0) do |layer|
-       0.upto(@sizes[layer]) do |node|
+      0.upto(@layer_sizes[layer] - 1) do |node|
         output = @outputs[layer][node]
         error = 0
         if layer == @layers
           error = target[node]
         else
           deltas = @deltas[layer + 1]
-          deltas.times do |i|
-            error += deltas[i] * @weights[layer + 1, i, node]
+          deltas.each_with_index do |delta, index|
+            error += delta * @weights[layer + 1][index][node]
           end
         end
         @errors[layer][node] = error
         @deltas[layer][node] = error * output * (1 - output)
-       end
+      end
     end
   end
 
@@ -144,7 +134,7 @@ class Cerebrum
     @outputs[0] = input
 
     (@layers + 1).times do |layer|  # Include output layer
-      next if layer == 0  # Exclude input layer
+      next if layer == 0
 
       layer_size = @layer_sizes[layer]
       previous_layer_size = @layer_sizes[layer - 1]
@@ -163,207 +153,6 @@ class Cerebrum
   end
 
   def activation_function(sum)
-    1 / (1 + Math.exp(-sum))
+    1 / (1 + Math.exp( -sum ))
   end
-
-  def mean_squared_error(errors)
-    sum = 0
-    errors.each do |error|
-      sum = sum + error * error
-    end
-    mse = sum / errors.length
-  end
-
-  def adjust_weights(rate)
-    for layer in 1..@layers
-      incoming = @layers[layer - 1]
-
-      for node in 0..@sizes
-        delta = @deltas[layer, node]
-
-        for i in 0..incoming.length
-          change = @changes[layer, node, i]
-          change = rate * delta * incoming[i] +
-                    @momentum * change
-
-          @changes[layer][node][i] = change
-          @weights[layer][node][i] += change
-        end
-
-        @biases[layer, node] += rate * delta
-      end
-    end
-  end
-
-  def calculate_deltas(target)
-    @layers.downto(0) do |layer|
-       0.upto(@sizes[layer]) do |node|
-        output = @outputs[layer][node]
-        error = 0
-        if layer == @layers
-          error = target[node]
-        else
-          deltas = @deltas[layer + 1]
-          deltas.times do |i|
-            error += deltas[i] * @weights[layer + 1, i, node]
-          end
-        end
-        @errors[layer][node] = error
-        @deltas[layer][node] = error * output * (1 - output)
-       end
-    end
-  end
-
-  def run_input(input)
-    output = []
-
-    @outputs[0] = input
-    1.upto(@layers) do |layer|
-
-      0.upto(@sizes[layer] - 1) do |node|
-
-        p "layer: #{layer} node: #{node}"
-        p "@weights[layer]"
-        @weights[layer]
-
-        weights = @weights[layer][node]
-
-        p "weights"
-        pp weights
-
-        sum = @biases[layer][node]
-
-        0.upto(weights.length - 1) do |i|
-          sum += weights[i] * input[i]
-        end
-
-        @outputs[layer][node] = 1 / (1 + Math.exp(-sum))
-      end
-      output = input = @outputs[layer]
-    end
-    p "output #{output}"
-    output
-  end
-<<<<<<< HEAD
-||||||| parent of f785547... fixed bug where a layer was not generated, var not defined in upper scope in run_input
-
-  def mean_squared_error(errors)
-    sum = 0
-    errors.each do |error|
-      sum = sum + error * error
-    end
-    mse = sum / errors.length
-  end
-
-  def adjust_weights(rate)
-    for layer in 1..@layers
-      incoming = @layers[layer - 1]
-
-      for node in 0..@sizes
-        delta = @deltas[layer, node]
-
-        for i in 0..incoming.length
-          change = @changes[layer, node, i]
-          change = rate * delta * incoming[i] +
-                    @momentum * change
-
-          @changes[layer][node][i] = change
-          @weights[layer][node][i] += change
-        end
-
-        @biases[layer, node] += rate * delta
-      end
-    end
-  end
-
-  def calculate_deltas(target)
-    @layers.downto(0) do |layer|
-       0.upto(@sizes[layer]) do |node|
-        output = @outputs[layer][node]
-        error = 0
-        if layer == @layers
-          error = target[node]
-        else
-          deltas = @deltas[layer + 1]
-          deltas.times do |i|
-            error += deltas[i] * @weights[layer + 1, i, node]
-          end
-        end
-        @errors[layer][node] = error
-        @deltas[layer][node] = error * output * (1 - output)
-       end
-    end
-  end
-
-  def run_input(input)
-    @outputs[0] = input
-    p "@outputs:"
-    pp @outputs
-    1.upto(@layers) do |layer|
-
-      0.upto(@sizes[layer] - 1) do |node|
-        weights = @weights[layer][node]
-        sum = @biases[layer][node]
-
-        0.upto(weights.length - 1) do |i|
-          sum += weights[i] * input[i]
-        end
-        p "layer: #{layer}, node: #{node}"
-        @outputs[layer][node] = 1 / (1 + Math.exp(-sum))
-      end
-      input = @outputs[layer]
-      output = @outputs[layer]
-    end
-    output
-  end
-=======
-
-  def mean_squared_error(errors)
-    sum = 0
-    errors.each do |error|
-      sum = sum + error * error
-    end
-    mse = sum / errors.length
-  end
-
-  def adjust_weights(rate)
-    for layer in 1..@layers
-      incoming = @layers[layer - 1]
-
-      for node in 0..@sizes
-        delta = @deltas[layer, node]
-
-        for i in 0..incoming.length
-          change = @changes[layer, node, i]
-          change = rate * delta * incoming[i] +
-                    @momentum * change
-
-          @changes[layer][node][i] = change
-          @weights[layer][node][i] += change
-        end
-
-        @biases[layer, node] += rate * delta
-      end
-    end
-  end
-
-  def calculate_deltas(target)
-    @layers.downto(0) do |layer|
-       0.upto(@sizes[layer]) do |node|
-        output = @outputs[layer][node]
-        error = 0
-        if layer == @layers
-          error = target[node]
-        else
-          deltas = @deltas[layer + 1]
-          deltas.times do |i|
-            error += deltas[i] * @weights[layer + 1, i, node]
-          end
-        end
-        @errors[layer][node] = error
-        @deltas[layer][node] = error * output * (1 - output)
-       end
-    end
-  end
->>>>>>> f785547... fixed bug where a layer was not generated, var not defined in upper scope in run_input
 end
