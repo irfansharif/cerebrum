@@ -1,4 +1,12 @@
 module Helpers
+  def zeros(size)
+    Array.new(size, 0)
+  end
+
+  def randos(size)
+    Array.new(size) { rand }
+  end
+
   # [{a: 1}, {b: 6, c: 7}] -> {a: 0, b: 1, c: 2}
   def features_to_vector_index_lookup_table(features)
     flattened_feature_keys = features.inject(:merge)

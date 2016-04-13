@@ -1,6 +1,5 @@
 require_relative "data_scrubber"
 require_relative "helper"
-require_relative "lin_alg"
 
 class Cerebrum
   include Helpers
@@ -90,46 +89,6 @@ class Cerebrum
     Float(sum_of_squares) / errors.length
   end
 
-  def adjust_weights(rate)
-    1.upto(@layers) do |layer|
-      incoming = @outputs[layer - 1]
-
-      0.upto(@layer_sizes[layer] - 1) do |node|
-        delta = @deltas[layer][node]
-
-        0.upto(incoming.length - 1) do |i|
-          change = @changes[layer][node][i]
-          change = rate * delta * incoming[i] +
-            @momentum * change
-
-          @changes[layer][node][i] = change
-          @weights[layer][node][i] += change
-        end
-
-        @biases[layer][node] += rate * delta
-      end
-    end
-  end
-
-  def calculate_deltas(target)
-    @layers.downto(0) do |layer|
-      0.upto(@layer_sizes[layer] - 1) do |node|
-        output = @outputs[layer][node]
-        error = 0
-        if layer == @layers
-          error = target[node]
-        else
-          deltas = @deltas[layer + 1]
-          deltas.each_with_index do |delta, index|
-            error += delta * @weights[layer + 1][index][node]
-          end
-        end
-        @errors[layer][node] = error
-        @deltas[layer][node] = error * output * (1 - output)
-      end
-    end
-  end
-
   def run_input(input)
     @outputs[0] = input
 
@@ -143,7 +102,7 @@ class Cerebrum
         weights = @weights[layer][node]
         sum = @biases[layer][node]
         previous_layer_size.times do |prev_node|
-          sum += @outputs[layer - 1][prev_node] * weights[prev_node] 
+          sum += @outputs[layer - 1][prev_node] * weights[prev_node]
         end
         @outputs[layer][node] = activation_function(sum)
       end
@@ -152,7 +111,53 @@ class Cerebrum
     @outputs.last
   end
 
+  def calculate_deltas(target)
+    @layers.downto(0) do |layer|
+      layer_size = @layer_sizes[layer]
+
+      layer_size.times do |node|
+        output = @outputs[layer][node]
+        error = 0
+
+        if layer == @layers # Output layer
+          error = target[node] - output
+        else # Hidden layer
+          deltas = @deltas[layer + 1]
+          deltas.each_with_index do |delta, next_node|
+            error += delta * @weights[layer + 1][next_node][node]
+          end
+        end
+        @errors[layer][node] = error
+        @deltas[layer][node] = error * output * (1 - output)
+      end
+    end
+  end
+
+  def adjust_weights(rate)
+    1.upto(@layers) do |layer|
+      prev_layer_output = @outputs[layer - 1]
+      layer_size = @layer_sizes[layer]
+
+      layer_size.times do |node|
+        delta = @deltas[layer][node]
+        prev_layer_output.length.times do |prev_node|
+          change = @changes[layer][node][prev_node]
+          change = rate * delta * prev_layer_output[prev_node] + (@momentum * change)
+
+          @changes[layer][node][prev_node] = change
+          @weights[layer][node][prev_node] += change
+        end
+
+        @biases[layer][node] += rate * delta
+      end
+    end
+  end
+
   def activation_function(sum)
     1 / (1 + Math.exp( -sum ))
+  end
+
+  def run(input)
+
   end
 end
