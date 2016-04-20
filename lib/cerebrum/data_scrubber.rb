@@ -5,19 +5,27 @@ class Cerebrum
     dataset
   end
 
+  def get_input_lookup_table(dataset)
+    input_features = dataset.map { |ex| ex[:input] }
+    features_to_vector_index_lookup_table(input_features)
+  end
+
+  def get_output_lookup_table(dataset)
+    output_features = dataset.map { |ex| ex[:output] }
+    features_to_vector_index_lookup_table(output_features)
+  end
+
   private
 
   def scrub_input(dataset)
-    input_features = dataset.map { |ex| ex[:input] }
-    input_lookup_table = features_to_vector_index_lookup_table(input_features)
+    input_lookup_table = get_input_lookup_table(dataset)
     dataset.each do |ex|
       ex[:input] = to_vector_given_features(ex[:input], input_lookup_table)
     end
   end
 
   def scrub_output(dataset)
-    output_features = dataset.map { |ex| ex[:output] }
-    output_lookup_table = features_to_vector_index_lookup_table(output_features)
+    output_lookup_table = get_output_lookup_table(dataset)
     dataset.each do |ex|
       ex[:output] = to_vector_given_features(ex[:output], output_lookup_table)
     end

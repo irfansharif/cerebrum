@@ -16,13 +16,30 @@ class CerebrumTest < Minitest::Test
   end
 
   def test_train
-    scrubbed_dataset = [
-      { input: [ 0.03, 0.7, 0.5 ],            output: [ 1, 0 ] },
-      { input: [ 0.16, 0.09, 0.2 ],           output: [ 0, 1 ] },
-      { input: [ 0.5, 0.5, 1 ],               output: [ 0, 1 ] }
+    @dataset  = [
+      { input: { r: 0.03, g: 0.7, b: 0.5 },   output: { black: 1 } },
+      { input: { r: 0.16, g: 0.09, b: 0.2 },  output: { white: 1 } },
+      { input: { r: 0.5, g: 0.5, b: 1 },      output: { white: 1 } }
     ]
 
     @network = Cerebrum.new
-    @network.train(scrubbed_dataset)
+    @network.train(@dataset)
+  end
+
+  def test_run
+    @dataset  = [
+      { input: { a: 0, b: 0 }, output: { o: 0 } },
+      { input: { a: 0, b: 1 }, output: { o: 1 } },
+      { input: { a: 1, b: 0 }, output: { o: 1 } },
+      { input: { a: 1, b: 1 }, output: { o: 0 } }
+    ]
+
+    @network = Cerebrum.new
+    @network.train(@dataset)
+
+    actual_result = @network.run({a: 1,b: 0})[:o].round(1)
+    result = 0.9
+
+    assert_equal actual_result, result
   end
 end

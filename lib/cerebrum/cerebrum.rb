@@ -4,7 +4,8 @@ require_relative "helper"
 class Cerebrum
   include Helpers
 
-  attr_accessor :learning_rate, :momentum, :binary_thresh, :hidden_layers
+  attr_accessor :learning_rate, :momentum, :binary_thresh, :hidden_layers,
+                :input_lookup_table, :output_lookup_table
 
   def initialize(learning_rate: 0.3, momentum: 0.1, binary_thresh: 0.5, hidden_layers: nil)
     @learning_rate  = learning_rate
@@ -55,6 +56,8 @@ class Cerebrum
   end
 
   def train(training_set, options = Hash.new)
+    @input_lookup_table ||= get_input_lookup_table(training_set)
+    @output_lookup_table ||= get_output_lookup_table(training_set)
     training_set = scrub_dataset(training_set)
 
     iterations        = options[:iterations] || 20000
@@ -158,6 +161,8 @@ class Cerebrum
   end
 
   def run(input)
-
+    input = to_vector_given_features(input, @input_lookup_table) if @input_lookup_table
+    output = run_input(input)
+    to_features_given_vector(output, @output_lookup_table) if @output_lookup_table
   end
 end
