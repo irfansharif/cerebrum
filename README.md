@@ -1,4 +1,4 @@
-# GEM: cerebrum [WIP] ![](https://travis-ci.org/irfansharif/cerebrum.svg?branch=master)
+# GEM: cerebrum ![](https://travis-ci.org/irfansharif/cerebrum.svg?branch=master)
 
 `cerebrum` is an implementation of
 [ANNs](https://en.wikipedia.org/wiki/Artificial_neural_networ://en.wikipedia.org/wiki/Artificial_neural_network)
@@ -38,7 +38,7 @@ network.train([
 ])
 
 result = network.run([1, 0])
-# => [0.983]
+# => [0.9333206724219677]
 
 ```
 
@@ -62,7 +62,7 @@ network.train([
 ]);
 
 result = network.run({ r: 1, g: 0.4, b: 0 })
-# => { white: 0.99, black: 0.002 }
+# => { :black=>0.011967728530458011, :white=>0.9871010273923573 }
 ```
 
 #### Cerebrum Options
@@ -71,10 +71,10 @@ result = network.run({ r: 1, g: 0.4, b: 0 })
 
 ```ruby
 network = Cerebrum.new({
-  learning_rate: 0.3,
-  momentum: 0.1,
-  binary_thresh: 0.5,
-  hidden_layers: [3, 4]
+  learning_rate:  0.3,
+  momentum:       0.1,
+  binary_thresh:  0.5,
+  hidden_layers:  [3, 4]
 })
 ```
 
@@ -85,10 +85,10 @@ network = Cerebrum.new({
 ```ruby
 network.train(data, {
   error_threshold: 0.005,
-  iterations: 20000,
-  log: true,
-  log_period: 100,
-  learning_rate: 0.3
+  iterations:      20000,
+  log:             true,
+  log_period:      100,
+  learning_rate:   0.3
 })
 ```
 
