@@ -59,7 +59,7 @@ class Cerebrum
   def run(input)
     input = to_vector_given_features(input, @input_lookup_table) if @input_lookup_table
     output = run_input(input)
-    to_features_given_vector(output, @output_lookup_table) if @output_lookup_table
+    @output_lookup_table ? to_features_given_vector(output, @output_lookup_table) : output
   end
 
   private

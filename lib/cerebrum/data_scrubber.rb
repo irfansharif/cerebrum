@@ -9,12 +9,12 @@ module DataScrubber
 
   def get_input_lookup_table(dataset)
     input_features = dataset.map { |ex| ex[:input] }
-    features_to_vector_index_lookup_table(input_features)
+    (input_features.first.is_a? Array) ? nil : features_to_vector_index_lookup_table(input_features)
   end
 
   def get_output_lookup_table(dataset)
     output_features = dataset.map { |ex| ex[:output] }
-    features_to_vector_index_lookup_table(output_features)
+    (output_features.first.is_a? Array) ? nil : features_to_vector_index_lookup_table(output_features)
   end
 
   def scrub_input(dataset)
