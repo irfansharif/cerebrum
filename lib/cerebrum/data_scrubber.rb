@@ -1,4 +1,6 @@
-class Cerebrum
+module DataScrubber
+  private
+
   def scrub_dataset(dataset)
     dataset = scrub_input(dataset) unless dataset[0][:input].is_a? Array
     dataset = scrub_output(dataset) unless dataset[0][:output].is_a? Array
@@ -14,8 +16,6 @@ class Cerebrum
     output_features = dataset.map { |ex| ex[:output] }
     features_to_vector_index_lookup_table(output_features)
   end
-
-  private
 
   def scrub_input(dataset)
     input_lookup_table = get_input_lookup_table(dataset)

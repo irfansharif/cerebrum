@@ -1,8 +1,9 @@
 require_relative "data_scrubber"
-require_relative "helper"
+require_relative "cerebrum_helper"
 
 class Cerebrum
-  include Helpers
+  include CerebrumHelper
+  include DataScrubber
 
   attr_accessor :learning_rate, :momentum, :binary_thresh, :hidden_layers,
                 :input_lookup_table, :output_lookup_table
@@ -14,44 +15,12 @@ class Cerebrum
     @hidden_layers  = hidden_layers
   end
 
-  def construct_network(layer_sizes)
-    @layer_sizes = layer_sizes
-    @layers = layer_sizes.length - 1 # Excluding output layer
-
-    @biases, @weights, @outputs = [], [], []
-    @deltas, @changes, @errors = [], [], []
-
-    (@layers + 1).times do |layer| # Including output layer
-      layer_size = @layer_sizes[layer]
-      @deltas[layer] = zeros(layer_size)
-      @errors[layer] = zeros(layer_size)
-      @outputs[layer] = zeros(layer_size)
-
-      next if layer == 0
-
-      @biases[layer] = randos(layer_size)
-      @weights[layer] = Array.new(layer_size)
-      @changes[layer] = Array.new(layer_size)
-      previous_layer_size = @layer_sizes[layer - 1]
-
-      layer_size.times do |node|
-        @weights[layer][node] = randos(previous_layer_size)
-        @changes[layer][node] = zeros(previous_layer_size)
-      end
-    end
-  end
-
   def train_pattern(input, target, learning_rate)
     learning_rate = learning_rate || @learning_rate
 
-    # forward propagation
     run_input(input)
-
-    # backward propagation
     calculate_deltas(target)
     adjust_weights(learning_rate)
-
-    # calculate new error
     mean_squared_error(@errors[@layers])
   end
 
@@ -85,6 +54,41 @@ class Cerebrum
     end
 
     { error: error, iterations: current_iteration }
+  end
+
+  def run(input)
+    input = to_vector_given_features(input, @input_lookup_table) if @input_lookup_table
+    output = run_input(input)
+    to_features_given_vector(output, @output_lookup_table) if @output_lookup_table
+  end
+
+  private
+
+  def construct_network(layer_sizes)
+    @layer_sizes = layer_sizes
+    @layers = layer_sizes.length - 1 # Excluding output layer
+
+    @biases, @weights, @outputs = [], [], []
+    @deltas, @changes, @errors = [], [], []
+
+    (@layers + 1).times do |layer| # Including output layer
+      layer_size = @layer_sizes[layer]
+      @deltas[layer] = zeros(layer_size)
+      @errors[layer] = zeros(layer_size)
+      @outputs[layer] = zeros(layer_size)
+
+      next if layer == 0
+
+      @biases[layer] = randos(layer_size)
+      @weights[layer] = Array.new(layer_size)
+      @changes[layer] = Array.new(layer_size)
+      previous_layer_size = @layer_sizes[layer - 1]
+
+      layer_size.times do |node|
+        @weights[layer][node] = randos(previous_layer_size)
+        @changes[layer][node] = zeros(previous_layer_size)
+      end
+    end
   end
 
   def mean_squared_error(errors)
@@ -158,11 +162,5 @@ class Cerebrum
 
   def activation_function(sum)
     1 / (1 + Math.exp( -sum ))
-  end
-
-  def run(input)
-    input = to_vector_given_features(input, @input_lookup_table) if @input_lookup_table
-    output = run_input(input)
-    to_features_given_vector(output, @output_lookup_table) if @output_lookup_table
   end
 end

@@ -1,4 +1,6 @@
-module Helpers
+module CerebrumHelper
+  private
+
   def zeros(size)
     Array.new(size, 0)
   end

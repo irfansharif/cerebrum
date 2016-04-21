@@ -18,18 +18,18 @@ class CerebrumTest < Minitest::Test
   end
 
   def test_input_vector_unaffected_through_scrub
-    assert_equal @network.scrub_dataset(@scrubbed_input), @fully_scrubbed
+    assert_equal @network.send(:scrub_dataset, @scrubbed_input), @fully_scrubbed
   end
 
   def test_output_vector_unaffected_through_scrub
-    assert_equal @network.scrub_dataset(@scrubbed_output), @fully_scrubbed
+    assert_equal @network.send(:scrub_dataset, @scrubbed_output), @fully_scrubbed
   end
 
   def test_dataset_unaffected_through_scrub
-    assert_equal @network.scrub_dataset(@fully_scrubbed), @fully_scrubbed
+    assert_equal @network.send(:scrub_dataset, @fully_scrubbed), @fully_scrubbed
   end
 
   def test_dataset_scrubbed_correctly
-    assert_equal @network.scrub_dataset(@unscrubbed_entirely), @fully_scrubbed
+    assert_equal @network.send(:scrub_dataset, @unscrubbed_entirely), @fully_scrubbed
   end
 end

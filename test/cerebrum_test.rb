@@ -15,17 +15,6 @@ class CerebrumTest < Minitest::Test
     assert_equal @network.binary_thresh, 0.5
   end
 
-  def test_train
-    @dataset  = [
-      { input: { r: 0.03, g: 0.7, b: 0.5 },   output: { black: 1 } },
-      { input: { r: 0.16, g: 0.09, b: 0.2 },  output: { white: 1 } },
-      { input: { r: 0.5, g: 0.5, b: 1 },      output: { white: 1 } }
-    ]
-
-    @network = Cerebrum.new
-    @network.train(@dataset)
-  end
-
   def test_run
     @dataset  = [
       { input: { a: 0, b: 0 }, output: { o: 0 } },
@@ -36,10 +25,8 @@ class CerebrumTest < Minitest::Test
 
     @network = Cerebrum.new
     @network.train(@dataset)
+    result = @network.run({a: 1,b: 0})
 
-    actual_result = @network.run({a: 1,b: 0})[:o].round(1)
-    result = 0.9
-
-    assert_equal actual_result, result
+    assert (0.9..1.0).include? result[:o]
   end
 end
