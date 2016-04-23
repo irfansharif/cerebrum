@@ -1,7 +1,7 @@
 # GEM: cerebrum ![](https://travis-ci.org/irfansharif/cerebrum.svg?branch=master) [![Gem Version](https://badge.fury.io/rb/cerebrum.svg)](https://badge.fury.io/rb/cerebrum)
 
 `cerebrum` is an implementation of
-[ANNs](https://en.wikipedia.org/wiki/Artificial_neural_networ://en.wikipedia.org/wiki/Artificial_neural_network)
+[ANNs](https://en.wikipedia.org/wiki/Artificial_neural_network)
 in Ruby.  There's no reason to train a neural network in Ruby, I'm using it to
 experiment and play around with the bare fundamentals of ANNs, original idea
 for this project [here](https://github.com/harthur/brain) is currently
