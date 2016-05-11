@@ -40,8 +40,8 @@ class Cerebrum
     input_size = training_set[0][:input].length
     output_size = training_set[0][:output].length
 
-    hidden_layer_sizes = [ [3, (input_size/2).floor].max ] unless @hidden_layers
-    layer_sizes = [input_size, hidden_layer_sizes, output_size].flatten
+    @hidden_layers ||= [ [3, (input_size/2).floor].max ]
+    layer_sizes = [input_size, @hidden_layers, output_size].flatten
     construct_network(layer_sizes)
 
     iterations.times do |i|
