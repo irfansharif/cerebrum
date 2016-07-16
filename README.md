@@ -62,7 +62,7 @@ network.train([
 ]);
 
 result = network.run({ r: 1, g: 0.4, b: 0 })
-# => { :black=>0.011967728530458011, :white=>0.9871010273923573 }
+# => { black: 0.011967728530458011, white: 0.9871010273923573 }
 ```
 
 #### Cerebrum Options
@@ -115,6 +115,22 @@ The output of `Cerebrum#train` is a hash of information about how the training w
 network.train(data, options)
 # => { error: 0.005324233132423, iterations: 9001 }
 ```
+
+#### JSON
+
+Serialize or load in the state of a trained network with JSON:
+
+``` ruby
+saved_state = network.save_state
+nn = Cerebrum.new
+nn.load_state(saved_state)
+
+nn.run({ r: 1, g: 0.4, b: 0 })
+# => { black: 0.011967728530458011, white: 0.9871010273923573 }
+```
+
+Additionally the new network can be separately trained whilst retaining all
+previous training from the other network.
 ## Development
 
 After checking out the repo, run `bin/setup` to install dependencies. Then, run
